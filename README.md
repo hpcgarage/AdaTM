@@ -12,7 +12,7 @@ The code is built upon SPLATT library, as a patch for it.
 
 ## Build requirements:
 
-- [CMake](https://cmake.org) (>v3.0)
+- [CMake](https://cmake.org) (>v2.6.0)
 
 - [SPLATT](http://shaden.io/splatt.html)
 
