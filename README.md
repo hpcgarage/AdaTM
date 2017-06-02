@@ -33,7 +33,9 @@ AdaTM is Adaptive Tensor Memoization algorithm for CP decomposition and its matr
 
 ## Limitation
 
-The code is closely built upon SPLATT library by using its CSF format and single MTTKRP implementation above. It is released as a patch now because of the limited API exposion of SPLATT. We'll consider to release more improved version in the future.
+AdaTM is only implemented for CSF format, not including COO format yet.
+The code is closely built upon SPLATT library by using its CSF format and single MTTKRP implementation. It is released as a patch of SPLATT. We're working together to get more SPLATT functions exposed and will release more improved version in the future.
+
 
 <br/>The algorithms and details are described in the following publications.
 ## Publication
