@@ -1,8 +1,7 @@
 AdaTM
 ------
 
-AdaTM is Adaptive Tensor Memoization algorithm for CP decomposition and its matricized tensor times Khatri-Rao product (MTTKRP) operation. AdaTM is to speedup a higher-order sparse MTTKRP sequence by removing redundant computations within it.
-The code is built upon SPLATT library, as a patch for it.
+AdaTM is Adaptive Tensor Memoization algorithm for CP decomposition and its matricized tensor times Khatri-Rao product (MTTKRP) operation. AdaTM is to speedup a higher-order sparse MTTKRP sequence by removing redundant computations within it, and includes a model-driven framework to predict the optimal performance.
 
 
 ## Supported operations:
@@ -31,6 +30,10 @@ The code is built upon SPLATT library, as a patch for it.
 
 6. Run CPD: `splatt cpd [TENSOR]'
 
+
+## Limitation
+
+The code is closely built upon SPLATT library by using its CSF format and single MTTKRP implementation above. It is released as a patch now because of the limited API exposion of SPLATT. We'll consider to release more improved version in the future.
 
 <br/>The algorithms and details are described in the following publications.
 ## Publication
