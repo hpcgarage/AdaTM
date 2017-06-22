@@ -13,7 +13,7 @@ AdaTM is Adaptive Tensor Memoization algorithm for CP decomposition and its matr
 
 - [CMake](https://cmake.org) (>v2.6.0)
 
-- [SPLATT](http://shaden.io/splatt.html)
+- [SPLATT v1.1.1](http://shaden.io/splatt.html)
 
 
 ## Build:
