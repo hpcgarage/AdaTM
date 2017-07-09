@@ -39,7 +39,7 @@ The code is closely built upon SPLATT library by using its CSF format and single
 
 <br/>The algorithms and details are described in the following publications.
 ## Publication
-* **Model-Driven Sparse CP Decomposition for Higher-Order Tensors**. Jiajia Li, Jee Choi, Ioakeim Perros, Jimeng Sun, Richard Vuduc. 31st IEEE International Parallel & Distributed Processing Symposium (IPDPS). 2017. [[pdf]](http://fruitfly1026.github.io/static/files/ipdps17-jli.pdf) [[slides]] (http://fruitfly1026.github.io/static/files/ipdps17-jli-slides.pdf)
+* **Model-Driven Sparse CP Decomposition for Higher-Order Tensors**. Jiajia Li, Jee Choi, Ioakeim Perros, Jimeng Sun, Richard Vuduc. 31st IEEE International Parallel & Distributed Processing Symposium (IPDPS). 2017. [[pdf]](http://fruitfly1026.github.io/static/files/ipdps17-jli.pdf) [[slides]](http://fruitfly1026.github.io/static/files/ipdps17-jli-slides.pdf)
 
 
 ## Contributiors
