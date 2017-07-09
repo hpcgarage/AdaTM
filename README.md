@@ -24,7 +24,7 @@ AdaTM is Adaptive Tensor Memoization algorithm for CP decomposition and its matr
 
 3. Type `./configure --adatm`
 
-4. `make'; `make install'.
+4. `make`; `make install`.
 
 5. Run MTTKRP: `splatt bench [TENSOR] -a adatm'
 
