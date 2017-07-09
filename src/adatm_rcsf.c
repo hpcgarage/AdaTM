@@ -205,8 +205,6 @@ static void p_csf_alloc_untiled(
   for(idx_t m=0; m < tt->nmodes-1; ++m) {
     p_mk_fptr(ct, tt, 0, nnz_ptr, m);
   }
-    // printf("OK in p_csf_alloc_untiled.\n");
-    // fflush(stdout);
 
 }
 
@@ -450,7 +448,6 @@ void count_nfibs(
     }
     assert(nfound == nfibs);
     tmp_fnext[nfibs] = nnz;
-    // iprint_array(tmp_fnext, (nfibs+1), "tmp_fnext");
     return;
   }
 
@@ -495,13 +492,10 @@ void count_nfibs(
     }
   }
   assert(nfound == nfibs);
-  // printf("nfound: %lu, nfibs: %lu\n", nfound, nfibs);
 
   /* mark end of last hyperplane */
   fprev[nfibs_per_grp[mode-1]] = nfibs;
   tmp_fnext[nfibs] = nnz;
-  // iprint_array(fprev, (nfibs_per_grp[mode-1]+1), "fprev");
-  // iprint_array(tmp_fnext, (nfibs+1), "tmp_fnext");
 
 }
 

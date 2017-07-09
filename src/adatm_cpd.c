@@ -314,17 +314,7 @@ double cpd_als_iterate_adaptive(
       timer_start(&timers[TIMER_MTTKRP]);
 
       mttkrp_csf_adaptive(tensors, rs_seq, n_csf, mats, m, thds, grp_prop, n_grp, use_csfs[m], use_tags[m], opts);
-#if 0
-      printf("MTTKRP mode: %d\n", m);
-      printf("--------Factor matrices------------\n");
-      for (idx_t mi=0; mi<nmodes; ++mi) {
-        printf("Factor matrix %d\n", mi);
-        print_mat(mats[mi]);
-      }
-      printf("Factor matrix %d\n", MAX_NMODES);
-      print_mat(mats[MAX_NMODES]);
-      printf("--------Factor matrices END------------\n");
-#endif
+
       timer_stop(&timers[TIMER_MTTKRP]);
 
       /* M2 = (CtC .* BtB .* ...)^-1 */

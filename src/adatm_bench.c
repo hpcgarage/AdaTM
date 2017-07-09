@@ -193,23 +193,17 @@ void predict_candidates_adaptive(
       else
         num_reMTTKRP = nmodes - memo_mode - 1;
     }
-    printf("Group: %lu\n", g);
-    iprint_array(nfibs_per_grp, nmodes, "nfibs_per_grp");
+
     csf_bytes += predict_csf_bytes_adaptive(tt, nfibs_per_grp);
-    // printf("csf_bytes: %lu\n", csf_bytes);
     rcsf_bytes += predict_rcsf_bytes_adaptive(tt, nfactors, begin_imten, n_imten, nfibs_per_grp);
-    // printf("rcsf_bytes: %lu\n", rcsf_bytes);
     csf_ops += predict_csf_ops_adaptive(tt, nfactors, nfibs_per_grp);
-    // printf("csf_ops: %lu\n", csf_ops);
     rcsf_ops += predict_rcsf_ops_adaptive(tt, nfactors, begin_imten, n_imten, num_reMTTKRP, nfibs_per_grp);
-    // printf("rcsf_ops: %lu\n", rcsf_ops);
   }
   configs[0].pspace = csf_bytes + rcsf_bytes;
   configs[0].pops = csf_ops + rcsf_ops;
 
   
   for(idx_t c=1; c<nconfigs; ++c) {
-    // printf("c: %lu\n", c); fflush(stdout);
     rcsf_bytes = 0;
     rcsf_ops = 0;
     n_grp = configs[c].n_grp;
@@ -295,7 +289,6 @@ idx_t decide_candidate_configs (
 
   /* Calculate from formulation */
   idx_t const n_grp_cal = (idx_t) ceil((double)nmodes / sqrt(2 * (nmodes-1)));
-  printf("n_grp_cal: %lu\n", n_grp_cal);
 
   // Consider the most possible number of groups.
   idx_t * const n_grp_vec = (idx_t *)splatt_malloc((n_grp_cal + 1) * sizeof(idx_t)); 
@@ -331,7 +324,6 @@ idx_t decide_candidate_configs (
     min_max_n_imten = array_min_range(max_n_imten, n_grp_cal+1, 0);
     nconfigs += min_max_n_imten;
   }
-  // printf("nconfigs: %lu\n", nconfigs); fflush(stdout);
 
   /* find all possible configurations */
   * configs = (configurations_adaptive *)splatt_malloc(nconfigs * sizeof(configurations_adaptive));
@@ -351,11 +343,11 @@ idx_t decide_candidate_configs (
     aver_len = nmodes / n_grp;
     rest_nmodes = nmodes % n_grp;
     if(aver_len == 1 && rest_nmodes > 0) {
-      printf("Warning: Cannot have %lu groups.\n", n_grp);
+      // printf("Warning: Cannot have %lu groups.\n", n_grp);
       continue;
     }
     if(n_grp >= nmodes) {
-      printf("Warning: Should have less than %lu groups.\n", nmodes);
+      // printf("Warning: Should have less than %lu groups.\n", nmodes);
       continue;
     }
     memset(max_n_imten, 0, (n_grp_cal + 1) * sizeof(idx_t));
@@ -385,9 +377,6 @@ idx_t decide_candidate_configs (
       n_grp = 2;
     }
     min_max_n_imten = array_min_range(max_n_imten, n_grp_cal+1, 0);
-    // printf("min_max_n_imten: %lu\n", min_max_n_imten);
-    // iprint_array(max_n_imten, (n_grp_cal + 1), "max_n_imten");
-    
 
 
     for(idx_t i=0; i<min_max_n_imten; ++i) {
@@ -412,8 +401,7 @@ idx_t decide_candidate_configs (
         memset(tmp_times, 0, 2 * nmodes * sizeof(idx_t));
         tmp_grp_prop[g].o_opt[0] = memo_m;
         tmp_opt[0] = memo_m;
-        // iprint_array(memo_mode_arr, (n_grp_cal + 1), "memo_mode_arr");
-        // printf("[n_grp: %lu, i: %lu, g: %lu]  memo_m: %lu, max_n_imten[g]: %lu\n", n_grp, i, g, memo_m, max_n_imten[g]);
+
         for(idx_t j=memo_m; j<=memo_m + max_n_imten[g]; ++j) {
           for(idx_t k=0; k<2 * nmodes; ++k) {
             sum_times[k] += product_order[j][k];
@@ -423,7 +411,7 @@ idx_t decide_candidate_configs (
           if(product_order[memo_m][k] > 0)
             tmp_times[k] = sum_times[k];
         }
-        // iprint_array(tmp_times, 2 * nmodes, "tmp_times");
+
         for(idx_t j=1; j<nmodes; ++j) {
           idx_t tmp_min = argmin_elem_range(tmp_times, 2 * nmodes, 0);
           assert(tmp_min > 0);
@@ -432,7 +420,6 @@ idx_t decide_candidate_configs (
             tmp_min -= nmodes;
           tmp_opt[j] = tmp_min; 
         }
-        // iprint_array(tmp_opt, nmodes, "tmp_opt");
         
         /* sort in non-decreasing order for o_opt[1, ..., begin_imten] */
         idx_t sort_size = nmodes - tmp_grp_prop[g].begin_imten;
@@ -442,7 +429,6 @@ idx_t decide_candidate_configs (
           tmp_pairs[j].y = dims[tmp_opt[j + tmp_grp_prop[g].begin_imten]];
         }
         pair_sort(tmp_pairs, sort_size);
-        // print_pair_array(tmp_pairs, sort_size, "tmp_pairs after sort");
 
         for(idx_t j=0; j<sort_size; ++j) {
           tmp_grp_prop[g].o_opt[j + tmp_grp_prop[g].begin_imten] = tmp_pairs[j].x;
@@ -453,7 +439,6 @@ idx_t decide_candidate_configs (
 
         splatt_free(tmp_pairs);
       } // Loop g in [0,n_grp), loop each group
-      // print_group_properties(tmp_grp_prop, n_grp, nmodes, "grp_prop");
       ++ cfg;
     } // Loop i in [0,min_max_n_imten), loop different n_imten's.
 
@@ -485,26 +470,16 @@ idx_t decide_parameters_auto (
 
   configurations_adaptive * configs;
   idx_t nconfigs = decide_candidate_configs(tt, product_order, &configs);
-  printf("nconfigs: %lu\n", nconfigs); fflush(stdout);
+  printf("Number of configurations: %lu\n", nconfigs); fflush(stdout);
 
   /* Calculate pspace and ptime */
   predict_candidates_adaptive(tt, nfactors, configs, nconfigs);
-  print_configs(configs, 0, nconfigs, nmodes, "predicted configs");
+  // print_configs(configs, 0, nconfigs, nmodes, "predicted configs");
 
   idx_t * real_config_locs;
   idx_t n_real_configs = limit_candidates_by_space(configs, nconfigs, &real_config_locs);
-  printf("n_real_configs: %lu\n", n_real_configs); fflush(stdout);
-  iprint_array(real_config_locs, nconfigs, "real_config_locs");
 
   idx_t optimal_loc = choose_candidates_by_strategy(configs, nconfigs, real_config_locs, n_real_configs, strategy);
-  printf("optimal_loc: %lu\n", optimal_loc); fflush(stdout);
-  // 5d
-  // idx_t optimal_loc = 34; //0; 34; 51; 62; 70; 76;
-  // 10d
-  // idx_t optimal_loc = 69; //0; 69; 103; 125; 141; 154; 164; 173;
-  // 15d
-  // idx_t optimal_loc = 83; // 0; 83; 124; 151; 171; 187; 200; 211;
-  // printf("Set optimal_loc: %lu\n", optimal_loc); fflush(stdout);
 
 
   idx_t n_grp = configs[optimal_loc].n_grp;
@@ -543,12 +518,9 @@ void bench_adaptm(
   matrix_t ** mats,
   bench_opts const * const opts)
 {
-  printf("Running AdaTM.\n");
-
   int strategy = 1;
   idx_t const nmodes = tt->nmodes;
   idx_t const niters = opts->niters;
-  printf("niters: %lu\n", niters);
   idx_t const * const threads = opts->threads;
   idx_t const nruns = opts->nruns;
   char matname[64];
@@ -578,17 +550,13 @@ void bench_adaptm(
     product_order[i] = (idx_t *)splatt_malloc(2 * nmodes * sizeof(idx_t));
   }
   decide_product_order(tt, product_order);
-  // printf("product_order:\n");
-  // for(idx_t i=0; i<nmodes; ++i) {
-  //   iprint_array(product_order[i], 2 * nmodes, "product_order[i]");
-  // }
 
 
   /* determine the parameters of MTTKRP chain. */
   group_properties * grp_prop;
   idx_t n_grp = decide_parameters_auto (tt, nfactors, strategy, product_order, &grp_prop);
-  printf("Optimal predicted grp_prop:\n");
-  printf("n_grp: %lu\n", n_grp);
+  printf("Optimal predicted group properties:\n");
+  printf("Number of groups: %lu\n", n_grp);
   print_group_properties(grp_prop, n_grp, nmodes, "Optimal grp_prop");
   for(idx_t i=0; i<nmodes; ++i) {
     splatt_free(product_order[i]);
@@ -599,7 +567,7 @@ void bench_adaptm(
   /* Use these parameters to build "n_grp" csf tensors. */
   idx_t n_csf = 0;
   splatt_csf * cs = csf_alloc_adaptive(tt, grp_prop, n_grp, cpd_opts, &n_csf);
-  printf("n_csf: %lu\n", n_csf);
+  printf("Number of CSFs: %lu\n", n_csf);
 
 
   printf("** CSF **\n");
@@ -608,48 +576,30 @@ void bench_adaptm(
   printf("CSF-STORAGE: %s\n\n", bstr);
   free(bstr);
 
-  stats_csf_adaptive(cs, n_csf);
-  printf("\n");
+  // stats_csf_adaptive(cs, n_csf);
+  // printf("\n");
 
-  // for(idx_t i=0; i<n_csf; ++i) {
-  //   printf("CSF %lu\n", i);
-  //   p_print_csf (cs + i);
-  // }
 
   /* Store Intermediate CSF */
   idx_t n_rcsf = 0;
   rcsf_seq_adaptive * rs_seq = rcsf_alloc_adaptive (cs, nfactors, grp_prop, n_grp, n_csf, cpd_opts, &n_rcsf);
-  printf("n_rcsf: %lu\n", n_rcsf);
+  printf("Number of vCSFs: %lu\n", n_rcsf);
 
-  printf("** RCSF **\n");
+  printf("** vCSF **\n");
   unsigned long rcsf_bytes = rcsf_storage_adaptive(rs_seq, n_rcsf);
   char * rbstr = bytes_str(rcsf_bytes);
-  printf("RCSF-STORAGE: %s\n", rbstr);
+  printf("vCSF-STORAGE: %s\n\n\n", rbstr);
   free(rbstr);
 
-  stats_rcsf_adaptive(rs_seq, n_rcsf);
-  printf("\n");
-  fflush(stdout);
-
-  // for(idx_t i=0; i<n_csf; ++i) {
-  //   printf("RCSF %lu\n", i);
-  //   print_rcsf_adaptive (rs_seq + i);
-  // }
+  // stats_rcsf_adaptive(rs_seq, n_rcsf);
+  // printf("\n");
+  // fflush(stdout);
 
   /* Determine the CSF tensor to be used for each MTTKRP */
   idx_t * use_csfs = (idx_t *)splatt_malloc(nmodes * sizeof(idx_t));
   idx_t * use_tags = (idx_t *)splatt_malloc(nmodes * sizeof(idx_t));
   decide_use_csfs(nmodes, grp_prop, n_grp, n_csf, use_csfs, use_tags);
-  iprint_array(use_csfs, nmodes, "use_csfs");
-  iprint_array(use_tags, nmodes, "use_tags");
 
-
-  // for (idx_t mi=0; mi<nmodes; ++mi) {
-  //   printf("Factor matrix %lu\n", mi);
-  //   print_mat(mats[mi]);
-  // }
-  // printf("Factor matrix %d\n", MAX_NMODES);
-  // print_mat(mats[MAX_NMODES]);
   
   timer_start(&timers[TIMER_MISC]);
   /* for each # threads */
@@ -668,15 +618,6 @@ void bench_adaptm(
         // Keep the same MTTKRP order with bench_csf_reuse
         timer_fstart(&modetime);
         mttkrp_csf_adaptive(cs, rs_seq, n_csf, mats, m, thds, grp_prop, n_grp, use_csfs[m], use_tags[m], cpd_opts);
-
-        // printf("============ MTTKRP %lu ==============\n", m);
-        // for(idx_t i=0; i<n_csf; ++i) {
-        //   printf("RCSF %lu\n", i);
-        //   print_rcsf_adaptive (rs_seq + i);
-        // }
-        // printf("Updated Factor matrix %lu\n", MAX_NMODES);
-        // print_mat(mats[MAX_NMODES]);
-
         timer_stop(&modetime);
         printf("  mode %" SPLATT_PF_IDX " %0.3fs\n", m+1, modetime.seconds);
         // if(opts->write && t == nruns-1 && i == 0) {

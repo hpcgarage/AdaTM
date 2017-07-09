@@ -465,7 +465,7 @@ static void p_csf_mttkrp_root3_reuse_adaptive(
 
       /* foreach fiber in slice */
       for(idx_t f=sptr[s]; f < sptr[s+1]; ++f) {
-        // jli: save intermediate values in rcsf.
+        // save intermediate values in rcsf.
         val_t * const restrict rcsf_vv = rcsf_vals + (f * nfactors);
         /* first entry of the fiber is used to initialize accumF */
         idx_t const jjfirst  = fptr[f];
@@ -500,7 +500,7 @@ static void p_csf_mttkrp_root3_reuse_adaptive(
 
       /* foreach fiber in slice */
       for(idx_t f=sptr[s]; f < sptr[s+1]; ++f) {
-        // jli: save intermediate values in rcsf.
+        // save intermediate values in rcsf.
         val_t * const restrict rcsf_vv = rcsf_vals + (f * nfactors);
         /* first entry of the fiber is used to initialize accumF */
         idx_t const jjfirst  = fptr[f];
@@ -636,18 +636,12 @@ static void p_csf_mttkrp_internal3_reuse_adaptive(
       /* write to fiber row */
       val_t * const restrict ov = ovals  + (fids[f] * nfactors);
       val_t const * const rcsf_vv = vals + (f * nfactors);
-      // dprint_array(ov, nfactors, "ov");
-      // dprint_array(rv, nfactors, "rv");
-      // dprint_array(rcsf_vv, nfactors, "rcsf_vv");
 
       omp_set_lock(locks + (fids[f] % NLOCKS));
       for(idx_t r=0; r < nfactors; ++r) {
         ov[r] += rv[r] * rcsf_vv[r];
       }
       omp_unset_lock(locks + (fids[f] % NLOCKS));
-      // dprint_array(ov, nfactors, "ov");
-      // print_mat(mats[MAX_NMODES]);
-      // printf("\n");
     }
   }
 }
@@ -832,9 +826,7 @@ static void p_csf_mttkrp_root(
 
 
 static void p_spt2t_add_hada (
-  // splatt_csf * const out_rcsf,
   val_t * const out_vals,
-  // splatt_csf const * const in_rcsf,
   idx_t const nslices,
   idx_t const * const in_sptr,
   idx_t const * const in_fids,
@@ -842,20 +834,7 @@ static void p_spt2t_add_hada (
   matrix_t const * const mats)
 {
   idx_t const nfactors = mats->J;
-  // idx_t const in_nmodes = in_rcsf->nmodes;
-  // idx_t const out_nmodes = out_rcsf->nmodes;
-  // assert (out_nmodes == in_nmodes - 1);
-  // assert (in_rcsf->dims[in_nmodes-1] == nfactors);
-  // assert (in_rcsf->dims[in_nmodes-2] == mats->I);
-  // assert (out_rcsf->nnz == in_rcsf->pt->nfibs[in_nmodes-3] * nfactors);
-
-  // point to slices, slice: mode-(N-2) * mode-(N-1)
-  // idx_t const nslices = in_rcsf->pt->nfibs[in_nmodes-3];
-  // idx_t const * const in_sptr = in_rcsf->pt->fptr[in_nmodes-3];
-  // idx_t const * const in_fids = in_rcsf->pt->fids[in_nmodes-2];
-  // val_t const * const in_vals = in_rcsf->pt->vals;
   val_t const * const mat_vals = mats->vals;
-  // val_t * const out_vals = out_rcsf->pt->vals;
 
   // Loop on mode-(N-3), loop slices
   #pragma omp for schedule(dynamic, 16) nowait
@@ -877,7 +856,6 @@ static void p_spt2t_add_hada (
 
 static void p_spt2m_add_hada (
   matrix_t * const omats,
-  // splatt_csf const * const rcsf,
   idx_t const nslices,
   idx_t const * const sptr,
   idx_t const * const fids,
@@ -885,18 +863,10 @@ static void p_spt2m_add_hada (
   matrix_t const * const imats)
 {
   idx_t const nfactors = imats->J;
-  // idx_t const nmodes = rcsf->nmodes;
-  // assert (nmodes == 3);
   assert (omats->J == nfactors);
-  // assert (rcsf->dims[nmodes-1] == nfactors);
-  // assert (rcsf->dims[nmodes-2] == imats->I);
   assert (rcsf->dims[0] == omats->I);
 
   // point to slices, slice: mode-(N-2) * mode-(N-1)
-  // idx_t const nslices = rcsf->pt->nfibs[0];
-  // idx_t const * const sptr = rcsf->pt->fptr[0];
-  // idx_t const * const fids = rcsf->pt->fids[1];
-  // val_t const * const rvals = rcsf->pt->vals;
   val_t const * const ivals = imats->vals;
   val_t * const ovals = omats->vals;
 
@@ -928,16 +898,13 @@ static void p_spttm (
   assert (mode == nmodes-1);  // TODO: we only support TTM on N-1 now.
   assert (ct->dims[mode] == mats->I);
   idx_t nfactors = mats->J;
-  // assert (out_rcsf->nnz == cf->pt->nfibs[mode-1] * nfactors);
 
-  // assert (out_rcsf->pt->fptr[mode-2] == ct_sptr);
   idx_t const nslices = ct->pt->nfibs[mode-2];  // mode-(N-3), slice: mode-(N-2) * mode-(N-1)
   idx_t * const ct_sptr = ct->pt->fptr[mode-2]; // Point to mode-(N-2), slice pointer
   idx_t * const ct_fptr = ct->pt->fptr[mode-1]; // Point to mode-(N-1)
   idx_t * const ct_fids = ct->pt->fids[mode];
   val_t * const ct_vals = ct->pt->vals;
   val_t * const mat_vals = mats->vals;
-  // val_t * const out_vals = out_rcsf->pt->vals;
   
 
   #pragma omp for schedule(dynamic, 16) nowait
@@ -992,52 +959,30 @@ static void p_csf_mttkrp_root_genreuse_adaptive(
   assert (degree >= 1);
   splatt_csf * const rcsfs = seq_rcsfs->rcsfs;
 
-  // when nmodes > 3
-  // idx_t const * const * const restrict fp
-  //     = (idx_t const * const *) ct->pt[tile_id].fptr;
-  // idx_t const * const * const restrict fids
-  //     = (idx_t const * const *) ct->pt[tile_id].fids;
   idx_t const nfactors = mats[0]->J;
 
   if ( degree == nmodes-2) {  // Store all intermediate RCSFs
     sp_timer_t tmptime, spttm_timer, hada_timer;
-    // timer_fstart(&tmptime);
 
-    // timer_fstart (&spttm_timer);
     p_spttm ((rcsfs+0)->pt[tile_id].vals, ct, mats[ct->dim_perm[nmodes-1]], nmodes-1);
-    // timer_stop (&spttm_timer);
-    // printf("spttm_time: %f\n", spttm_timer.seconds);
 
-    // timer_fstart (&hada_timer);
     for (idx_t m=nmodes-2; m>=2; --m) {
       idx_t rloc = nmodes-1-m;  // rcsf location is different from computation order.
       matrix_t * hmat = mats[ct->dim_perm[m]];
 
-      // p_spt2t_add_hada (rcsfs+rloc, rcsfs+rloc-1, hmat);
-      // sp_timer_t onehada_timer;
-      // timer_fstart (&onehada_timer);
       idx_t const in_nmodes = (rcsfs+rloc-1)->nmodes;
       idx_t nslices = (rcsfs+rloc-1)->pt[tile_id].nfibs[in_nmodes-3];
       idx_t const * in_sptr = (rcsfs+rloc-1)->pt[tile_id].fptr[in_nmodes-3];
       idx_t const * in_fids = (rcsfs+rloc-1)->pt[tile_id].fids[in_nmodes-2];
       val_t const * in_vals = (rcsfs+rloc-1)->pt[tile_id].vals;
       p_spt2t_add_hada ((rcsfs+rloc)->pt[tile_id].vals, nslices, in_sptr, in_fids, in_vals, hmat);
-      // timer_stop(&onehada_timer);
-      // printf("onehada_time: %f\n", onehada_timer.seconds);
     }
 
-    // p_spt2m_add_hada (mats[MAX_NMODES], rcsfs+nmodes-3, mats[ct->dim_perm[1]]);
     assert ((rcsfs+nmodes-3)->nmodes == 3);
     idx_t nslices = ct->pt[tile_id].nfibs[0];
     idx_t const * in_sptr = ct->pt[tile_id].fptr[0];
     idx_t const * in_fids = ct->pt[tile_id].fids[1];
     p_spt2m_add_hada (mats[MAX_NMODES], nslices, in_sptr, in_fids, (rcsfs+degree-1)->pt[tile_id].vals, mats[ct->dim_perm[1]]);
-
-    // timer_stop (&hada_timer);
-    // printf("hada_time: %f\n", hada_timer.seconds);
-
-    // timer_stop(&tmptime);
-    // printf("tmptime: %f\n", tmptime.seconds);
   }
   else {  // Only store useful RCSFs
     sp_timer_t tmptime, spttm_timer, hada_timer;
@@ -1050,37 +995,22 @@ static void p_csf_mttkrp_root_genreuse_adaptive(
     val_t * tmp_vals_2 = (val_t *)splatt_malloc (max_nvals_2 * sizeof(val_t));
     memset (tmp_vals_2, 0, max_nvals_2 * sizeof(val_t));
 
-    // timer_fstart (&spttm_timer);
     /* mode-(nmodes-1), do SpTTM.
      * Not be saved in RCSF in TWOMODE case.
      */ 
     p_spttm (tmp_vals, ct, mats[ct->dim_perm[nmodes-1]], nmodes-1);
-    // timer_stop (&spttm_timer);
-    // printf("spttm_time: %f\n", spttm_timer.seconds);
-    // printf("mode-%d\n", nmodes-1);
-    // dprint_array (tmp_vals, ct->pt[tile_id].nfibs[nmodes-2]*nfactors, "tmp_vals");
 
-    // timer_fstart (&hada_timer);
     /* mode-(nmodes-2), ... , rmodes[0]+1, do a sequence of Hada-Reduction.
      * The resulting values still don't be saved in TWOMODE case.
      */ 
     for (idx_t m=nmodes-2; m>begin_imten; --m) {
-      // sp_timer_t onehada_timer, onememcpy_timer;
-      // timer_fstart (&onehada_timer);
       memset(tmp_vals_2, 0, ct->pt[tile_id].nfibs[m-1]*nfactors * sizeof(val_t));
       matrix_t * hmat = mats[ct->dim_perm[m]];
       idx_t nslices = ct->pt[tile_id].nfibs[m-1];
       idx_t const * in_sptr = ct->pt[tile_id].fptr[m-1];
       idx_t const * in_fids = ct->pt[tile_id].fids[m];
       p_spt2t_add_hada (tmp_vals_2, nslices, in_sptr, in_fids, tmp_vals, hmat);
-      // timer_stop(&onehada_timer);
-      // printf("onehada_time: %f\n", onehada_timer.seconds);
-      // timer_fstart (&onememcpy_timer);
       memcpy(tmp_vals, tmp_vals_2, ct->pt[tile_id].nfibs[m-1]*nfactors * sizeof(val_t));
-      // printf("mode-%d\n", m);
-      // dprint_array (tmp_vals, ct->pt[tile_id].nfibs[m-1]*nfactors, "tmp_vals");
-      // timer_stop (&onememcpy_timer);
-      // printf("onememcpy_time: %f\n", onememcpy_timer.seconds);
     }
     /* mode-rmodes[0], do a Hada-Reduction.
      * The resulting values are saved as RCSF[0].
@@ -1090,14 +1020,11 @@ static void p_csf_mttkrp_root_genreuse_adaptive(
     idx_t const * in_sptr = ct->pt[tile_id].fptr[begin_imten-1];
     idx_t const * in_fids = ct->pt[tile_id].fids[begin_imten];
     p_spt2t_add_hada (rcsfs->pt[tile_id].vals, nslices, in_sptr, in_fids, tmp_vals, hmat);
-      // printf("mode-%d\n", begin_imten);
-      // dprint_array (rcsfs->pt[tile_id].vals, nslices*nfactors, "rcsfs->pt[tile_id].vals");
 
     /* mode-(rmodes[1]), ..., (rmodes[degree-1]), do a sequence of Hada-Reduction.
      * The resulting values are saved as RCSF[1], ... , RCSF[degree-1].
      */
     for (idx_t rloc=1; rloc<degree; ++rloc) {
-      // idx_t mloc = rmodes[rloc];  // rcsf location is different from computation order.
       idx_t mloc = begin_imten - rloc;
       matrix_t * hmat = mats[ct->dim_perm[mloc]];
       idx_t const in_nmodes = (rcsfs+rloc-1)->nmodes;
@@ -1106,9 +1033,6 @@ static void p_csf_mttkrp_root_genreuse_adaptive(
       idx_t const * in_fids = (rcsfs+rloc-1)->pt[tile_id].fids[in_nmodes-2];
       val_t const * in_vals = (rcsfs+rloc-1)->pt[tile_id].vals;
       p_spt2t_add_hada ((rcsfs+rloc)->pt[tile_id].vals, nslices, in_sptr, in_fids, in_vals, hmat);
-      // p_spt2t_add_hada (rcsfs+rloc, rcsfs+rloc-1, hmat);
-      // printf("mode-%d\n", mloc);
-      // dprint_array ((rcsfs+rloc)->pt[tile_id].vals, nslices*nfactors, "(rcsfs+rloc)->pt[tile_id].vals");
     }
 
     /* if degree is partial. We cannot store all useful intermediate RCSFs. */
@@ -1123,54 +1047,33 @@ static void p_csf_mttkrp_root_genreuse_adaptive(
       in_fids = ct->pt[tile_id].fids[cur_mode];
       memset(tmp_vals, 0, nslices*nfactors * sizeof(val_t));
       p_spt2t_add_hada (tmp_vals, nslices, in_sptr, in_fids, (rcsfs+degree-1)->pt[tile_id].vals, hmat);
-        // printf("mode-%d\n", cur_mode);
-        // dprint_array (tmp_vals, nslices*nfactors, "tmp_vals");
 
       for (idx_t m=cur_mode-1; m>1; --m) {  // Last one is one mode-2
-        // sp_timer_t onehada_timer, onememcpy_timer;
-        // timer_fstart (&onehada_timer);
         memset(tmp_vals_2, 0, ct->pt[tile_id].nfibs[m-1]*nfactors * sizeof(val_t));
         matrix_t * hmat = mats[ct->dim_perm[m]];
         idx_t nslices = ct->pt[tile_id].nfibs[m-1];
         idx_t const * in_sptr = ct->pt[tile_id].fptr[m-1];
         idx_t const * in_fids = ct->pt[tile_id].fids[m];
         p_spt2t_add_hada (tmp_vals_2, nslices, in_sptr, in_fids, tmp_vals, hmat);
-        // timer_stop(&onehada_timer);
-        // printf("onehada_time-2: %f\n", onehada_timer.seconds);
-        // timer_fstart (&onememcpy_timer);
         memcpy(tmp_vals, tmp_vals_2, ct->pt[tile_id].nfibs[m-1]*nfactors * sizeof(val_t));
-        // printf("mode-%d\n", m);
-        // dprint_array (tmp_vals, nslices*nfactors, "tmp_vals");
-        // timer_stop (&onememcpy_timer);
-        // printf("onememcpy_time-2: %f\n", onememcpy_timer.seconds);
       }
 
       /* Last Hadamard-reduction */
-      // p_spt2m_add_hada (mats[MAX_NMODES], rcsfs+degree-1, mats[ct->dim_perm[1]]);
       nslices = ct->pt[tile_id].nfibs[0];
       in_sptr = ct->pt[tile_id].fptr[0];
       in_fids = ct->pt[tile_id].fids[1];
       p_spt2m_add_hada (mats[MAX_NMODES], nslices, in_sptr, in_fids, tmp_vals, mats[ct->dim_perm[1]]);
-        // printf("mode-1\n");
-        // dprint_array (mats[MAX_NMODES]->vals, nslices*nfactors, "mats[MAX_NMODES]->vals");
     }
     else {
       /* Last Hadamard-reduction */
-      // p_spt2m_add_hada (mats[MAX_NMODES], rcsfs+degree-1, mats[ct->dim_perm[1]]);
       nslices = ct->pt[tile_id].nfibs[0];
       in_sptr = ct->pt[tile_id].fptr[0];
       in_fids = ct->pt[tile_id].fids[1];
       p_spt2m_add_hada (mats[MAX_NMODES], nslices, in_sptr, in_fids, (rcsfs+degree-1)->pt[tile_id].vals, mats[ct->dim_perm[1]]);
     }
 
-    // timer_stop (&hada_timer);
-    // printf("hada_time: %f\n", hada_timer.seconds);
-
     splatt_free(tmp_vals);
     splatt_free(tmp_vals_2);
-
-    // timer_stop(&tmptime);
-    // printf("tmptime: %f\n", tmptime.seconds);
   }
 
 }
@@ -1347,7 +1250,7 @@ static void p_csf_mttkrp_leaf(
     mvals[m] = mats[ct->dim_perm[m]]->vals;
     /* grab the next row of buf from thds */
     buf[m] = ((val_t *) thds[tid].scratch[2]) + (nfactors * m);
-    memset(buf[m], 0, nfactors * sizeof(val_t)); // jli: added
+    memset(buf[m], 0, nfactors * sizeof(val_t)); 
   }
 
   /* foreach outer slice */
@@ -1711,7 +1614,7 @@ static void p_csf_mttkrp_internal_reuse_adaptive(
     mvals[m] = mats[ct->dim_perm[m]]->vals;
     /* grab the next row of buf from thds */
     buf[m] = ((val_t *) thds[tid].scratch[2]) + (nfactors * m);
-    memset(buf[m], 0, nfactors * sizeof(val_t)); // jli: added
+    memset(buf[m], 0, nfactors * sizeof(val_t));
   }
   val_t * const ovals = mats[MAX_NMODES]->vals;
 
@@ -2144,9 +2047,6 @@ void mttkrp_csf_adaptive(
   idx_t const use_tag,
   double const * const opts)
 {
-  // printf("Function \"mttkrp_csf_adaptive\"\n");
-  // fflush(stdout);
-
   /* clear output matrix */
   matrix_t * const M = mats[MAX_NMODES];
   M->I = tensors[0].dims[mode];
@@ -2513,92 +2413,13 @@ void mttkrp_giga(
 /******************************************************************************
  * TTBOX MTTKRP
  *****************************************************************************/
-#if 0
+/* extend ttbox to high-order tensors. */
 void mttkrp_ttbox(
   sptensor_t const * const tt,
   matrix_t ** mats,
   idx_t const mode,
   val_t * const scratch)
 {
-  sp_timer_t ttbox_timer, setup_timer, memset_timer, comp_timer, scratch_timer, mv_timer;
-  double ttbox_sec, setup_sec, memset_sec, comp_sec, scratch_sec, mv_sec;
-  // timer_fstart (&ttbox_timer);
-
-  // timer_fstart (&setup_timer);
-  matrix_t       * const M = mats[MAX_NMODES];
-  matrix_t const * const A = mode == 0 ? mats[1] : mats[0];
-  matrix_t const * const B = mode == 2 ? mats[1] : mats[2];
-
-  idx_t const I = tt->dims[mode];
-  idx_t const rank = M->J;
-
-  memset(M->vals, 0, I * rank * sizeof(val_t));
-
-  idx_t const nnz = tt->nnz;
-  idx_t const * const restrict indM = tt->ind[mode];
-  idx_t const * const restrict indA =
-    mode == 0 ? tt->ind[1] : tt->ind[0];
-  idx_t const * const restrict indB =
-    mode == 2 ? tt->ind[1] : tt->ind[2];
-
-  val_t const * const restrict vals = tt->vals;
-  // timer_stop (&setup_timer);
-  // setup_sec = setup_timer.seconds;
-
-  // timer_fstart (&comp_timer);
-  // timer_reset (&scratch_timer);
-  // timer_reset (&mv_timer);
-  for(idx_t r=0; r < rank; ++r) {
-    val_t       * const restrict mv =  M->vals + (r * I);
-    val_t const * const restrict av =  A->vals + (r * A->I);
-    val_t const * const restrict bv =  B->vals + (r * B->I);
-
-    /* stretch out columns of A and B */
-    // timer_start (&scratch_timer);
-    #pragma omp parallel for
-    for(idx_t x=0; x < nnz; ++x) {
-      scratch[x] = vals[x] * av[indA[x]] * bv[indB[x]];
-    }
-    // timer_stop (&scratch_timer);
-    // scratch_sec = scratch_timer.seconds;
-
-    /* now accumulate into m1 */
-    // timer_start (&mv_timer);
-    for(idx_t x=0; x < nnz; ++x) {
-      mv[indM[x]] += scratch[x];
-    }
-    // timer_stop (&mv_timer);
-    // mv_sec = mv_timer.seconds;
-  }
-  // timer_stop (&comp_timer);
-  // comp_sec = comp_timer.seconds;
-
-  // timer_stop (&ttbox_timer);
-  // ttbox_sec = ttbox_timer.seconds;
-  // printf("ttbox_sec: %f\n", ttbox_sec);
-  // printf("\tsetup_sec: %f\n", setup_sec);
-  // printf("\tcomp_sec: %f\n", comp_sec);
-  // printf("\t\tscratch_sec: %f\n", scratch_sec);
-  // printf("\t\tmv_sec: %f\n", mv_sec);
-}
-#endif
-
-
-
-
-#if 1
-// jli: extend ttbox to high-order tensors.
-void mttkrp_ttbox(
-  sptensor_t const * const tt,
-  matrix_t ** mats,
-  idx_t const mode,
-  val_t * const scratch)
-{
-  sp_timer_t ttbox_timer, setup_timer, memset_timer, comp_timer, scratch_timer, mv_timer;
-  double ttbox_sec, setup_sec, memset_sec, comp_sec, scratch_sec, mv_sec;
-  // timer_fstart (&ttbox_timer);
-
-  // timer_fstart (&setup_timer);
   idx_t const nnz = tt->nnz;
   idx_t ** inds = tt->ind;
   val_t const * const restrict vals = tt->vals;
@@ -2608,12 +2429,6 @@ void mttkrp_ttbox(
   idx_t const rank = M->J;
 
   memset(M->vals, 0, I * rank * sizeof(val_t));
-
-  // #pragma omp parallel
-  // {
-  //   if (omp_get_thread_num() == 0)
-  //     printf("omp num_threads: %d\n", omp_get_num_threads());
-  // }
 
   if (tt->type == SPLATT_3MODE)
   {
@@ -2630,36 +2445,23 @@ void mttkrp_ttbox(
     mode == 0 ? tt->ind[1] : tt->ind[0];
     idx_t const * const indB =
     mode == 2 ? tt->ind[1] : tt->ind[2];
-    // timer_stop (&setup_timer);
-    // setup_sec = setup_timer.seconds;
 
-    // timer_fstart (&comp_timer);
-    // timer_reset (&scratch_timer);
-    // timer_reset (&mv_timer);
     for(idx_t r=0; r < rank; ++r) {
       val_t       * const restrict mv =  M->vals + (r * I);
       val_t const * const restrict av =  A->vals + (r * A->I);
       val_t const * const restrict bv =  B->vals + (r * B->I);
 
       /* stretch out columns of A and B */
-      // timer_start (&scratch_timer);
       #pragma omp parallel for
       for(idx_t x=0; x < nnz; ++x) {
         scratch[x] = vals[x] * av[indA[x]] * bv[indB[x]];
       }
-      // timer_stop (&scratch_timer);
-      // scratch_sec = scratch_timer.seconds;
 
       /* now accumulate into m1 */
-      // timer_start (&mv_timer);
       for(idx_t x=0; x < nnz; ++x) {
         mv[indM[x]] += scratch[x];
       }
-      // timer_stop (&mv_timer);
-      // mv_sec = mv_timer.seconds;
     }
-    // timer_stop (&comp_timer);
-    // comp_sec = comp_timer.seconds;
   }
   else if (tt->type == SPLATT_NMODE)
   {
@@ -2686,12 +2488,9 @@ void mttkrp_ttbox(
     {
       for (idx_t ii=0; ii<nnz; ++ii)
         scratch[ii] = tt->vals[ii];
-      // memcpy (scratch, tt->vals, nnz);
-      // val_t       * const mv =  update_mat->vals_ + (r * update_mat->stride_);
       val_t       * const restrict mv =  M->vals + (r * I);
       for (idx_t i=0; i<nmats; i++)
       {
-        // set_values<val_t> (scratch, scratch_2, nnz);
         matrix_t *tmp_mat = mats[mats_order[i]];
         assert (rank == tmp_mat->J);
         idx_t *tmp_inds = tt->ind[mats_order[i]];
@@ -2700,7 +2499,6 @@ void mttkrp_ttbox(
         for(idx_t x=0; x < nnz; ++x) {
           scratch_2[x] = scratch[x] * av[tmp_inds[x]];
         }
-        // memcpy (scratch, scratch_2, nnz);
         for (idx_t ii=0; ii<nnz; ++ii)
           scratch[ii] = scratch_2[ii];
       }
@@ -2712,20 +2510,9 @@ void mttkrp_ttbox(
     free(mats_order);
     free(scratch_2);
   }
-  // print_mat (M);
-
-  // timer_stop (&ttbox_timer);
-  // ttbox_sec = ttbox_timer.seconds;
-
-  // printf("ttbox_sec: %f\n", ttbox_sec);
-  // printf("\tsetup_sec: %f\n", setup_sec);
-  // printf("\tcomp_sec: %f\n", comp_sec);
-  // printf("\t\tscratch_sec: %f\n", scratch_sec);
-  // printf("\t\tmv_sec: %f\n", mv_sec);
 
   return;
 }
-#endif
 
 
 

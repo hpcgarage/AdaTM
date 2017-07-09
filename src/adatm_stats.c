@@ -74,10 +74,10 @@ void stats_rcsf_adaptive(
   char * name = (char *)splatt_malloc(100 * sizeof(char));
 
   for(idx_t g=0; g<n_rcsf; ++g) {
-    sprintf(name, "RCSF Seq %lu", g);
+    sprintf(name, "vCSF Seq %lu", g);
     printf("%s\n", name);
     for (int i=0; i<(seq_rcsfs+g)->n_imten; ++i) {
-      sprintf(name, "   intermediate tensor: %lu", i);
+      sprintf(name, "   vCSF[%lu]:", i);
       printf("%s\n", name);
       p_stats_csf_mode((seq_rcsfs+g)->rcsfs+i);
     }
