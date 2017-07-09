@@ -45,3 +45,6 @@ The code is closely built upon SPLATT library by using its CSF format and single
 ## Contributiors
 
 * Jiajia Li (Contact: jiajiali@gatech.edu)
+
+## License
+AdaTM is released under the MIT License, you're free to redistribute it and/or modify it. Please see the 'LICENSE' file for details.
